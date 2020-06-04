@@ -1,0 +1,45 @@
+# -*- org-babel-results-keyword: "outputs"; -*-
+* maths
+** add
+
+#+begin_src clojure :results pp
+  [(+)
+   (+ 1)
+   (+ 1 1)]
+#+end_src
+=>
+#+outputs:
+: [0 1 2]
+
+** sub
+
+#+begin_src clojure :results pp
+  [(- 1)
+   (- 2 1)
+   (- 3 2 1)]
+#+end_src
+=>
+#+outputs:
+: [-1 1 0]
+
+* str
+** concat
+
+=concat= is used for collections, so "hello world" is not the
+expected result from this code:
+
+#+begin_src clojure :results pp
+(concat "hello" " " "world")
+#+end_src
+=>
+#+outputs:
+: (\h \e \l \l \o \space \w \o \r \l \d)
+
+=str= is the correct way to concat strings:
+
+#+begin_src clojure :results pp
+(str "hello" " " "world")
+#+end_src
+=>
+#+outputs:
+: "hello world"
