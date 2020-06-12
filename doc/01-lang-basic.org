@@ -22,6 +22,28 @@
 #+outputs:
 : [-1 1 0]
 
+** multiply
+
+#+begin_src clojure
+[(*)
+(* 1)
+(* 2 3)]
+#+end_src
+=>
+#+outputs:
+: [1 1 6]
+
+** divide
+
+#+begin_src clojure
+[(/ 1)
+ (/ 2 1)
+ (/ 1 2)]
+#+end_src
+=>
+#+outputs:
+: [1 2 1/2]
+
 * str
 ** concat
 
@@ -41,5 +63,12 @@ expected result from this code:
 (str "hello" " " "world")
 #+end_src
 =>
+#+outputs:
+: "hello world"
+
+#+begin_src clojure :results pp
+(str "hello" " " "world")
+#+end_src
+
 #+outputs:
 : "hello world"
