@@ -66,9 +66,46 @@ expected result from this code:
 #+outputs:
 : "hello world"
 
-#+begin_src clojure :results pp
-(str "hello" " " "world")
-#+end_src
+* list
 
+#+begin_src clojure :results pp
+  (let [v '(1 2 3)]
+    [(get v 0)
+     (first v)
+     (rest v)
+     (last v)])
+#+end_src
+=>
 #+outputs:
-: "hello world"
+: [nil 1 (2 3) 3]
+
+* vector
+
+Accessing vector:
+
+#+begin_src clojure :results pp
+  (let [v [1 2 3]]
+    [(v 0)
+     (get v 1)
+     (first v)
+     (rest v)
+     (last v)])
+#+end_src
+=>
+#+outputs:
+: [1 2 1 (2 3) 3]
+
+
+* map
+
+#+begin_src clojure :results pp
+  (let [m {:name "KM" :home "Hangzhou" "nick" "Kimi"}]
+    [(keys m)
+     (vals m)
+     (m :name)
+     (m "nick")
+     (:home m)])
+#+end_src
+=>
+#+outputs:
+: [(:name :home "nick") ("KM" "Hangzhou" "Kimi") "KM" "Kimi" "Hangzhou"]
