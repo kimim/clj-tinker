@@ -95,6 +95,22 @@ Accessing vector:
 #+outputs:
 : [1 2 1 (2 3) 3]
 
+** test
+
+#+begin_src clojure
+[
+ (clojure.core/vector? [])
+ (coll? [])
+ (counted? [])
+ (sorted? [])
+ (reversible? [])
+ (sequential? [])
+ (associative? [])
+]
+#+end_src
+=>
+#+outputs:
+| true | true | true | false | true | true | true |
 
 * map
 
@@ -109,3 +125,25 @@ Accessing vector:
 =>
 #+outputs:
 : [(:name :home "nick") ("KM" "Hangzhou" "Kimi") "KM" "Kimi" "Hangzhou"]
+* set
+** set ops
+#+begin_src clojure
+  (let [s1 #{:k :i :m}
+        s2 #{:i :v :y}]
+     [(clojure.set/union s1 s2)
+      (clojure.set/difference s1 s2)
+      (clojure.set/difference s2 s1)
+      (clojure.set/intersection s1 s2)
+      (clojure.set/select even? #{1 2 3 4})])
+#+end_src
+
+#+outputs:
+: '(#(:y :v :m :k :i) #(:m :k) #(:y :v) #(:i) #(4 2))
+* version
+
+#+begin_src clojure
+  (clojure-version)
+#+end_src
+=>
+#+outputs:
+: 1.10.0
