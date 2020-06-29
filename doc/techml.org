@@ -1,0 +1,216 @@
+#+begin_src clojure :results output
+  (ns clj-tinker.techml
+    (:require [tech.verify.ml.classification :as classify-verify]
+              [tech.libs.xgboost]
+              [tech.libs.smile]
+              [tech.ml :as ml]
+              [tech.ml.loss :as loss]
+              [tech.ml.dataset :as ds]
+              [tech.ml.dataset.pipeline :as dsp]
+              [tech.v2.datatype :as dtype]
+              [tech.ml.dataset.pipeline.pipeline-operators
+               :refer [without-recording
+                       pipeline-train-context
+                       pipeline-inference-context]]
+              [tech.ml.dataset.pipeline.column-filters :as cf]
+              ))
+#+end_src
+
+#+RESULTS:
+
+#+begin_src clojure :results output
+  ;; get a fruit test dataset
+  (first (classify-verify/mapseq-dataset))
+  (def fruits (ds/->dataset (classify-verify/mapseq-dataset)))
+  (def fruits (classify-verify/fruit-dataset))
+  (dtype/shape fruits)
+  (println (ds/select fruits :all (range 10)))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+{:fruit-label 1.0, :fruit-name :apple, :fruit-subtype :granny-smith, :mass 192.0, :width 8.4, :height 7.3, :color-score 0.55}
+_unnamed [10 7]:
+
+| :fruit-label | :fruit-name | :fruit-subtype | :mass | :width | :height | :color-score |
+|-------------:|-------------|----------------|------:|-------:|--------:|-------------:|
+|          1.0 |      :apple |  :granny-smith | 192.0 |    8.4 |     7.3 |         0.55 |
+|          1.0 |      :apple |  :granny-smith | 180.0 |    8.0 |     6.8 |         0.59 |
+|          1.0 |      :apple |  :granny-smith | 176.0 |    7.4 |     7.2 |         0.60 |
+|          2.0 |   :mandarin |      :mandarin |  86.0 |    6.2 |     4.7 |         0.80 |
+|          2.0 |   :mandarin |      :mandarin |  84.0 |    6.0 |     4.6 |         0.79 |
+|          2.0 |   :mandarin |      :mandarin |  80.0 |    5.8 |     4.3 |         0.77 |
+|          2.0 |   :mandarin |      :mandarin |  80.0 |    5.9 |     4.3 |         0.81 |
+|          2.0 |   :mandarin |      :mandarin |  76.0 |    5.8 |     4.0 |         0.81 |
+|          1.0 |      :apple |      :braeburn | 178.0 |    7.1 |     7.8 |         0.92 |
+|          1.0 |      :apple |      :braeburn | 172.0 |    7.4 |     7.0 |         0.89 |
+
+#+end_example
+
+#+begin_src clojure  :results output
+  (defn fruit-pipeline
+    [dataset]
+    (-> dataset
+        (ds/remove-columns [:fruit-subtype :fruit-label])
+        (dsp/string->number)
+        (dsp/range-scale #(cf/not cf/categorical?))
+        (ds/set-inference-target :fruit-name)))
+
+  (def processed-ds (fruit-pipeline fruits))
+  (println (ds/select processed-ds :all (range 10)))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+_unnamed [10 5]:
+
+| :fruit-name |       :mass |      :width |     :height | :color-score |
+|------------:|------------:|------------:|------------:|-------------:|
+|         1.0 | -0.18881119 |  0.36842105 |  0.01538462 |  -1.00000000 |
+|         1.0 | -0.27272727 |  0.15789474 | -0.13846154 |  -0.78947368 |
+|         1.0 | -0.30069930 | -0.15789474 | -0.01538462 |  -0.73684211 |
+|         0.0 | -0.93006993 | -0.78947368 | -0.78461538 |   0.31578947 |
+|         0.0 | -0.94405594 | -0.89473684 | -0.81538462 |   0.26315789 |
+|         0.0 | -0.97202797 | -1.00000000 | -0.90769231 |   0.15789474 |
+|         0.0 | -0.97202797 | -0.94736842 | -0.90769231 |   0.36842105 |
+|         0.0 | -1.00000000 | -1.00000000 | -1.00000000 |   0.36842105 |
+|         1.0 | -0.28671329 | -0.31578947 |  0.16923077 |   0.94736842 |
+|         1.0 | -0.32867133 | -0.15789474 | -0.07692308 |   0.78947368 |
+
+#+end_example
+
+#+begin_src clojure :results output
+(def model (ml/train {:model-type :smile.regression/elastic-net}
+                     processed-ds))
+(type model)
+(keys model)
+(print (:options model))
+#+end_src
+
+#+RESULTS:
+: {:model-type :smile.regression/elastic-net, :dataset-shape [5 59], :feature-columns [:mass :width :height :color-score], :label-columns [:fruit-name], :label-map {:fruit-name {:mandarin 0, :apple 1, :lemon 2, :orange 3}}, :column-map {:mass {:name :mass, :size 59, :datatype :float64, :column-type :feature}, :width {:name :width, :size 59, :datatype :float64, :column-type :feature}, :height {:name :height, :size 59, :datatype :float64, :column-type :feature}, :color-score {:name :color-score, :size 59, :datatype :float64, :column-type :feature}, :fruit-name {:categorical? true, :name :fruit-name, :size 59, :datatype :float64, :label-map {:mandarin 0, :apple 1, :lemon 2, :orange 3}, :column-type :inference}}}
+
+#+begin_src clojure :results output
+(def predictions (ml/predict model processed-ds))
+(def labels (ds/labels processed-ds))
+(prn (loss/classification-accuracy predictions labels))
+(prn (loss/classification-loss predictions labels))
+#+end_src
+
+#+RESULTS:
+: class java.lang.IllegalArgumentExceptionclass java.lang.IllegalArgumentExceptionclass java.lang.IllegalArgumentExceptionclass java.lang.IllegalArgumentExceptionExecution error (IllegalArgumentException) at tech.ml.loss/classification-accuracy$fn (loss.clj:44).
+: Don't know how to create ISeq from: java.lang.Double
+: Execution error (IllegalArgumentException) at tech.ml.loss/classification-accuracy$fn (loss.clj:44).
+: Don't know how to create ISeq from: java.lang.Double
+
+
+#+begin_src clojure :results output
+(def model (ml/train {:model-type :xgboost/classification}
+                     processed-ds))
+(type model)
+(keys model)
+(print (:options model))
+#+end_src
+
+#+RESULTS:
+: {:model-type :xgboost/classification, :dataset-shape [5 59], :feature-columns [:mass :width :height :color-score], :label-columns [:fruit-name], :label-map {:fruit-name {:mandarin 0, :apple 1, :lemon 2, :orange 3}}, :column-map {:mass {:name :mass, :size 59, :datatype :float64, :column-type :feature}, :width {:name :width, :size 59, :datatype :float64, :column-type :feature}, :height {:name :height, :size 59, :datatype :float64, :column-type :feature}, :color-score {:name :color-score, :size 59, :datatype :float64, :column-type :feature}, :fruit-name {:categorical? true, :name :fruit-name, :size 59, :datatype :float64, :label-map {:mandarin 0, :apple 1, :lemon 2, :orange 3}, :column-type :inference}}}
+
+#+begin_src clojure :results output
+(def predictions (ml/predict model processed-ds))
+(def labels (ds/labels processed-ds))
+(prn (loss/classification-accuracy predictions labels))
+(prn (loss/classification-loss predictions labels))
+#+end_src
+
+#+RESULTS:
+: 1.0
+: 0.0
+
+
+#+begin_src clojure :results output
+(defn fruit-pipeline
+  [dataset training?]
+  (-> dataset
+      (ds/remove-columns [:fruit-subtype :fruit-label])
+      (dsp/range-scale #(cf/not cf/categorical?))
+      (dsp/pwhen
+       training?
+       #(without-recording
+         (-> %
+             (dsp/string->number :fruit-name)
+             (ds/set-inference-target :fruit-name))))))
+
+(def dataset-train-data (pipeline-train-context
+                           (fruit-pipeline fruits true)))
+(println (ds/select (:dataset dataset-train-data) :all (range 10)))
+
+(def inference-src-ds (ds/remove-columns fruits [:fruit-name :fruit-subtype :fruit-label]))
+(println (ds/select inference-src-ds :all (range 10)))
+
+(def inference-data (pipeline-inference-context
+                           (:context dataset-train-data)
+                           (fruit-pipeline inference-src-ds false)))
+(println (ds/select (:dataset inference-data) :all (range 10)))
+
+(doseq [m (take 10 (ml/predict model (:dataset inference-data)))]
+    (prn m))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+_unnamed [10 5]:
+
+| :fruit-name |       :mass |      :width |     :height | :color-score |
+|------------:|------------:|------------:|------------:|-------------:|
+|         1.0 | -0.18881119 |  0.36842105 |  0.01538462 |  -1.00000000 |
+|         1.0 | -0.27272727 |  0.15789474 | -0.13846154 |  -0.78947368 |
+|         1.0 | -0.30069930 | -0.15789474 | -0.01538462 |  -0.73684211 |
+|         0.0 | -0.93006993 | -0.78947368 | -0.78461538 |   0.31578947 |
+|         0.0 | -0.94405594 | -0.89473684 | -0.81538462 |   0.26315789 |
+|         0.0 | -0.97202797 | -1.00000000 | -0.90769231 |   0.15789474 |
+|         0.0 | -0.97202797 | -0.94736842 | -0.90769231 |   0.36842105 |
+|         0.0 | -1.00000000 | -1.00000000 | -1.00000000 |   0.36842105 |
+|         1.0 | -0.28671329 | -0.31578947 |  0.16923077 |   0.94736842 |
+|         1.0 | -0.32867133 | -0.15789474 | -0.07692308 |   0.78947368 |
+
+_unnamed [10 4]:
+
+| :mass | :width | :height | :color-score |
+|------:|-------:|--------:|-------------:|
+| 192.0 |    8.4 |     7.3 |         0.55 |
+| 180.0 |    8.0 |     6.8 |         0.59 |
+| 176.0 |    7.4 |     7.2 |         0.60 |
+|  86.0 |    6.2 |     4.7 |         0.80 |
+|  84.0 |    6.0 |     4.6 |         0.79 |
+|  80.0 |    5.8 |     4.3 |         0.77 |
+|  80.0 |    5.9 |     4.3 |         0.81 |
+|  76.0 |    5.8 |     4.0 |         0.81 |
+| 178.0 |    7.1 |     7.8 |         0.92 |
+| 172.0 |    7.4 |     7.0 |         0.89 |
+
+_unnamed [10 4]:
+
+|       :mass |      :width |     :height | :color-score |
+|------------:|------------:|------------:|-------------:|
+| -0.18881119 |  0.36842105 |  0.01538462 |  -1.00000000 |
+| -0.27272727 |  0.15789474 | -0.13846154 |  -0.78947368 |
+| -0.30069930 | -0.15789474 | -0.01538462 |  -0.73684211 |
+| -0.93006993 | -0.78947368 | -0.78461538 |   0.31578947 |
+| -0.94405594 | -0.89473684 | -0.81538462 |   0.26315789 |
+| -0.97202797 | -1.00000000 | -0.90769231 |   0.15789474 |
+| -0.97202797 | -0.94736842 | -0.90769231 |   0.36842105 |
+| -1.00000000 | -1.00000000 | -1.00000000 |   0.36842105 |
+| -0.28671329 | -0.31578947 |  0.16923077 |   0.94736842 |
+| -0.32867133 | -0.15789474 | -0.07692308 |   0.78947368 |
+
+{:mandarin 0.00567386532202363, :apple 0.9749930500984192, :lemon 0.006902134045958519, :orange 0.012431012466549873}
+{:mandarin 0.006593874655663967, :apple 0.9565249681472778, :lemon 0.006771395448595285, :orange 0.030109768733382225}
+{:mandarin 0.005649499129503965, :apple 0.9708059430122375, :lemon 0.0068724933080375195, :orange 0.016672048717737198}
+{:mandarin 0.9058150053024292, :apple 0.014717460609972477, :lemon 0.03283243998885155, :orange 0.04663509875535965}
+{:mandarin 0.9052721261978149, :apple 0.012833178043365479, :lemon 0.02616247348487377, :orange 0.05573226511478424}
+{:mandarin 0.9052721261978149, :apple 0.012833178043365479, :lemon 0.02616247348487377, :orange 0.05573226511478424}
+{:mandarin 0.9281758069992065, :apple 0.014268497005105019, :lemon 0.02682439237833023, :orange 0.030731311067938805}
+{:mandarin 0.9281758069992065, :apple 0.014268497005105019, :lemon 0.02682439237833023, :orange 0.030731311067938805}
+{:mandarin 0.01563860848546028, :apple 0.9251953959465027, :lemon 0.021498875692486763, :orange 0.03766714781522751}
+{:mandarin 0.004543534480035305, :apple 0.9794245958328247, :lemon 0.002808679360896349, :orange 0.013223208487033844}
+#+end_example
