@@ -1,0 +1,37 @@
+* Load data
+
+=dk-ative.docjure.spreadsheet= can load Excel files with several
+spreadsheet. But there are one limitation, that the head row cannot
+be automatically recognized. You need to use a heapmap to map the
+table headers with cell headers.
+
+#+begin_src clojure :results output
+  (ns km.big-data
+    (:require [dk.ative.docjure.spreadsheet :as xls]))
+  (->> (xls/load-workbook "resources/namelist.xlsx")
+       (xls/select-sheet #".*1")
+       (xls/select-columns {:A :name :B :school :C :age :D :birthday})
+       rest
+       (map println))
+#+end_src
+
+#+RESULTS:
+: {:name Ivy Yang, :school MIT, :age 30.0, :birthday #inst "1990-08-07T15:00:00.000-00:00"}
+: {:name James, :school UoC, :age 20.0, :birthday #inst "2000-01-01T16:00:00.000-00:00"}
+
+To combine sheets:
+
+#+begin_src clojure :results output
+  (->> (xls/load-workbook "resources/namelist.xlsx")
+       ((fn [book] (map #(xls/select-sheet % book) [#".*1" #"Sheet2"])))
+       (map #(xls/select-columns {:A :name :B :school :C :age :D :birthday} %))
+       (map rest)
+       (reduce concat)
+       (map println))
+#+end_src
+
+#+RESULTS:
+: {:name Ivy Yang, :school MIT, :age 30.0, :birthday #inst "1990-08-07T15:00:00.000-00:00"}
+: {:name James, :school UoC, :age 20.0, :birthday #inst "2000-01-01T16:00:00.000-00:00"}
+: {:name Immo, :school FU, :age 33.0, :birthday #inst "1987-10-10T16:00:00.000-00:00"}
+: {:name Umo, :school UM, :age 34.0, :birthday #inst "1986-01-01T16:00:00.000-00:00"}

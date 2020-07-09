@@ -1,3 +1,7 @@
+* Prepare namespace
+
+First of all, we need to require some libs into the namespace:
+
 #+begin_src clojure :results output
   (ns clj-tinker.techml
     (:require [tech.verify.ml.classification :as classify-verify]
@@ -18,10 +22,13 @@
 
 #+RESULTS:
 
+* Load the dataset
+
+get a fruit test dataset:
+
 #+begin_src clojure :results output
-  ;; get a fruit test dataset
-  (first (classify-verify/mapseq-dataset))
-  (def fruits (ds/->dataset (classify-verify/mapseq-dataset)))
+  ;;(first (classify-verify/mapseq-dataset))
+  ;;(def fruits (ds/->dataset (classify-verify/mapseq-dataset)))
   (def fruits (classify-verify/fruit-dataset))
   (dtype/shape fruits)
   (println (ds/select fruits :all (range 10)))
@@ -29,7 +36,6 @@
 
 #+RESULTS:
 #+begin_example
-{:fruit-label 1.0, :fruit-name :apple, :fruit-subtype :granny-smith, :mass 192.0, :width 8.4, :height 7.3, :color-score 0.55}
 _unnamed [10 7]:
 
 | :fruit-label | :fruit-name | :fruit-subtype | :mass | :width | :height | :color-score |
@@ -46,6 +52,7 @@ _unnamed [10 7]:
 |          1.0 |      :apple |      :braeburn | 172.0 |    7.4 |     7.0 |         0.89 |
 
 #+end_example
+
 
 #+begin_src clojure  :results output
   (defn fruit-pipeline
@@ -79,30 +86,7 @@ _unnamed [10 5]:
 
 #+end_example
 
-#+begin_src clojure :results output
-(def model (ml/train {:model-type :smile.regression/elastic-net}
-                     processed-ds))
-(type model)
-(keys model)
-(print (:options model))
-#+end_src
-
-#+RESULTS:
-: {:model-type :smile.regression/elastic-net, :dataset-shape [5 59], :feature-columns [:mass :width :height :color-score], :label-columns [:fruit-name], :label-map {:fruit-name {:mandarin 0, :apple 1, :lemon 2, :orange 3}}, :column-map {:mass {:name :mass, :size 59, :datatype :float64, :column-type :feature}, :width {:name :width, :size 59, :datatype :float64, :column-type :feature}, :height {:name :height, :size 59, :datatype :float64, :column-type :feature}, :color-score {:name :color-score, :size 59, :datatype :float64, :column-type :feature}, :fruit-name {:categorical? true, :name :fruit-name, :size 59, :datatype :float64, :label-map {:mandarin 0, :apple 1, :lemon 2, :orange 3}, :column-type :inference}}}
-
-#+begin_src clojure :results output
-(def predictions (ml/predict model processed-ds))
-(def labels (ds/labels processed-ds))
-(prn (loss/classification-accuracy predictions labels))
-(prn (loss/classification-loss predictions labels))
-#+end_src
-
-#+RESULTS:
-: class java.lang.IllegalArgumentExceptionclass java.lang.IllegalArgumentExceptionclass java.lang.IllegalArgumentExceptionclass java.lang.IllegalArgumentExceptionExecution error (IllegalArgumentException) at tech.ml.loss/classification-accuracy$fn (loss.clj:44).
-: Don't know how to create ISeq from: java.lang.Double
-: Execution error (IllegalArgumentException) at tech.ml.loss/classification-accuracy$fn (loss.clj:44).
-: Don't know how to create ISeq from: java.lang.Double
-
+* Train the model
 
 #+begin_src clojure :results output
 (def model (ml/train {:model-type :xgboost/classification}
@@ -126,39 +110,42 @@ _unnamed [10 5]:
 : 1.0
 : 0.0
 
+* Train and Verify
 
 #+begin_src clojure :results output
-(defn fruit-pipeline
-  [dataset training?]
-  (-> dataset
-      (ds/remove-columns [:fruit-subtype :fruit-label])
-      (dsp/range-scale #(cf/not cf/categorical?))
-      (dsp/pwhen
-       training?
-       #(without-recording
-         (-> %
-             (dsp/string->number :fruit-name)
-             (ds/set-inference-target :fruit-name))))))
+  (defn fruit-pipeline
+    [dataset training?]
+    (-> dataset
+        (ds/remove-columns [:fruit-subtype :fruit-label])
+        (dsp/range-scale #(cf/not cf/categorical?))
+        (dsp/pwhen
+         training?
+         #(without-recording
+           (-> %
+               (dsp/string->number :fruit-name)
+               (ds/set-inference-target :fruit-name))))))
 
-(def dataset-train-data (pipeline-train-context
+  (def dataset-train-data (pipeline-train-context
                            (fruit-pipeline fruits true)))
-(println (ds/select (:dataset dataset-train-data) :all (range 10)))
 
-(def inference-src-ds (ds/remove-columns fruits [:fruit-name :fruit-subtype :fruit-label]))
-(println (ds/select inference-src-ds :all (range 10)))
+  (println "train" (ds/select (:dataset dataset-train-data) :all (range 10)))
 
-(def inference-data (pipeline-inference-context
-                           (:context dataset-train-data)
-                           (fruit-pipeline inference-src-ds false)))
-(println (ds/select (:dataset inference-data) :all (range 10)))
+  (def inference-src-ds (ds/remove-columns fruits [:fruit-name :fruit-subtype :fruit-label]))
+  (println "inference src" (ds/select inference-src-ds :all (range 10)))
 
-(doseq [m (take 10 (ml/predict model (:dataset inference-data)))]
+  (def inference-data (pipeline-inference-context
+                       (:context dataset-train-data)
+                       (fruit-pipeline inference-src-ds false)))
+
+  (println "inference data" (ds/select (:dataset inference-data) :all (range 10)))
+
+  (doseq [m (take 10 (ml/predict model (:dataset inference-data)))]
     (prn m))
 #+end_src
 
 #+RESULTS:
 #+begin_example
-_unnamed [10 5]:
+train _unnamed [10 5]:
 
 | :fruit-name |       :mass |      :width |     :height | :color-score |
 |------------:|------------:|------------:|------------:|-------------:|
@@ -173,7 +160,7 @@ _unnamed [10 5]:
 |         1.0 | -0.28671329 | -0.31578947 |  0.16923077 |   0.94736842 |
 |         1.0 | -0.32867133 | -0.15789474 | -0.07692308 |   0.78947368 |
 
-_unnamed [10 4]:
+inference src _unnamed [10 4]:
 
 | :mass | :width | :height | :color-score |
 |------:|-------:|--------:|-------------:|
@@ -188,7 +175,7 @@ _unnamed [10 4]:
 | 178.0 |    7.1 |     7.8 |         0.92 |
 | 172.0 |    7.4 |     7.0 |         0.89 |
 
-_unnamed [10 4]:
+inference data _unnamed [10 4]:
 
 |       :mass |      :width |     :height | :color-score |
 |------------:|------------:|------------:|-------------:|
@@ -214,3 +201,33 @@ _unnamed [10 4]:
 {:mandarin 0.01563860848546028, :apple 0.9251953959465027, :lemon 0.021498875692486763, :orange 0.03766714781522751}
 {:mandarin 0.004543534480035305, :apple 0.9794245958328247, :lemon 0.002808679360896349, :orange 0.013223208487033844}
 #+end_example
+
+
+* Train with Smil
+
+#+begin_src clojure :results output
+(def model (ml/train {:model-type :smile.regression/elastic-net}
+                     processed-ds))
+(type model)
+(keys model)
+(print (:options model))
+#+end_src
+
+#+RESULTS:
+: {:model-type :smile.regression/elastic-net, :dataset-shape [5 59], :feature-columns [:mass :width :height :color-score], :label-columns [:fruit-name], :label-map {:fruit-name {:mandarin 0, :apple 1, :lemon 2, :orange 3}}, :column-map {:mass {:name :mass, :size 59, :datatype :float64, :column-type :feature}, :width {:name :width, :size 59, :datatype :float64, :column-type :feature}, :height {:name :height, :size 59, :datatype :float64, :column-type :feature}, :color-score {:name :color-score, :size 59, :datatype :float64, :column-type :feature}, :fruit-name {:categorical? true, :name :fruit-name, :size 59, :datatype :float64, :label-map {:mandarin 0, :apple 1, :lemon 2, :orange 3}, :column-type :inference}}}Jun 30, 2020 12:30:59 AM com.github.fommil.netlib.BLAS <clinit>
+: WARNING: Failed to load implementation from: com.github.fommil.netlib.NativeSystemBLAS
+: Jun 30, 2020 12:30:59 AM com.github.fommil.netlib.BLAS <clinit>
+: WARNING: Failed to load implementation from: com.github.fommil.netlib.NativeRefBLAS
+
+#+begin_src clojure :results output
+(def predictions (ml/predict model processed-ds))
+(def labels (ds/labels processed-ds))
+(prn (loss/classification-accuracy predictions labels))
+(prn (loss/classification-loss predictions labels))
+#+end_src
+
+#+RESULTS:
+: class java.lang.IllegalArgumentExceptionclass java.lang.IllegalArgumentExceptionclass java.lang.IllegalArgumentExceptionclass java.lang.IllegalArgumentExceptionExecution error (IllegalArgumentException) at tech.ml.loss/classification-accuracy$fn (loss.clj:44).
+: Don't know how to create ISeq from: java.lang.Double
+: Execution error (IllegalArgumentException) at tech.ml.loss/classification-accuracy$fn (loss.clj:44).
+: Don't know how to create ISeq from: java.lang.Double

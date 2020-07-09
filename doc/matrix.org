@@ -1,0 +1,27 @@
+* matrix creation
+
+#+begin_src clojure
+(use 'clojure.core.matrix)
+(matrix [1 2])
+(matrix [[0 1 2] [3 4 5]])
+(require '[uncomplicate.neanderthal.core :as neanderthal])
+(require '[uncomplicate.neanderthal.native :as neanderthal-native])
+(def a (neanderthal-native/dge 3 2 [1 2 3 4 5 6]))
+(def b (neanderthal-native/dge 2 3 [10 20 30 40 50 60]))
+(neanderthal/mm a b)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+nil[1 2][[0 1 2] [3 4 5]]nilclass clojure.lang.Compiler$CompilerExceptionclass clojure.lang.Compiler$CompilerExceptionclass clojure.lang.Compiler$CompilerExceptionclass java.lang.ClassCastExceptionclass clojure.lang.Compiler$CompilerExceptionclass clojure.lang.Compiler$CompilerExceptionclass clojure.lang.Compiler$CompilerExceptionclass java.lang.ClassCastExceptionSLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+Syntax error (UnsatisfiedLinkError) compiling at (mkl.clj:82:35).
+C:\cygwin64\tmp\neanderthal-mkl-0.30.0334786953987588252.dll: Can't find dependent libraries
+Syntax error compiling at (clj-tinker:localhost:51261(clj)*:6:8).
+No such namespace: neanderthal-native
+Syntax error compiling at (clj-tinker:localhost:51261(clj)*:7:8).
+No such namespace: neanderthal-native
+Execution error (ClassCastException) at uncomplicate.neanderthal.core/triangular? (core.clj:231).
+class clojure.lang.Var$Unbound cannot be cast to class uncomplicate.neanderthal.internal.api.MatrixImplementation (clojure.lang.Var$Unbound and uncomplicate.neanderthal.internal.api.MatrixImplementation are in unnamed module of loader 'app')
+#+end_example
