@@ -21,6 +21,7 @@
                  [cljsjs/material-table "1.57.2-0"]
                  [cljsjs/material-ui-icons "4.4.1-0"]
                  [metasoarous/oz "1.6.0-alpha6"]
+                 [metasoarous/darkstar "0.1.0"]
                  [dk.ative/docjure "1.14.0"]
                  [techascent/tech.ml "2.01"]
                  [techascent/tech.ml.dataset "2.07"]

@@ -1,4 +1,6 @@
-* Load data
+* 加载数据
+
+** Loading data from several sheets in Excel file
 
 =dk-ative.docjure.spreadsheet= can load Excel files with several
 spreadsheet. But there are one limitation, that the head row cannot
@@ -17,7 +19,7 @@ table headers with cell headers.
 
 #+RESULTS:
 : {:name Ivy Yang, :school MIT, :age 30.0, :birthday #inst "1990-08-07T15:00:00.000-00:00"}
-: {:name James, :school UoC, :age 20.0, :birthday #inst "2000-01-01T16:00:00.000-00:00"}
+: {:name Kimi Ma, :school ZJU, :age 20.0, :birthday #inst "2000-01-01T16:00:00.000-00:00"}
 
 To combine sheets:
 
@@ -32,6 +34,113 @@ To combine sheets:
 
 #+RESULTS:
 : {:name Ivy Yang, :school MIT, :age 30.0, :birthday #inst "1990-08-07T15:00:00.000-00:00"}
-: {:name James, :school UoC, :age 20.0, :birthday #inst "2000-01-01T16:00:00.000-00:00"}
+: {:name Kimi Ma, :school ZJU, :age 20.0, :birthday #inst "2000-01-01T16:00:00.000-00:00"}
 : {:name Immo, :school FU, :age 33.0, :birthday #inst "1987-10-10T16:00:00.000-00:00"}
 : {:name Umo, :school UM, :age 34.0, :birthday #inst "1986-01-01T16:00:00.000-00:00"}
+
+** 从Excel加载数据
+
+如果仅仅从一个Excel表单中加载数据，就可以直接用 =tech.ml.dataset= 的
+=->dataset= 函数读取：
+
+#+begin_src clojure :results output
+  (ns km.big-data
+    (:require [tech.ml.dataset :as ds]
+              [tech.v2.datatype :as dtype]))
+  (def energy-data (ds/->dataset "test/data/china-energy.xlsx" {:parser-fn {"指标" :int32}}))
+  (-> energy-data
+      (ds/select-columns
+       ["指标" "能源生产总量(万吨标准煤)" "原煤生产总量(万吨标准煤)"
+        "水电、核电、风电生产总量(万吨标准煤)"])
+      (print))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+test/data/china-energy.xlsx [20 4]:
+
+|   指标 | 能源生产总量(万吨标准煤) | 原煤生产总量(万吨标准煤) | 水电、核电、风电生产总量(万吨标准煤) |
+|-----:|--------------:|--------------:|--------------------:|
+| 2019 |     397000.00 |     272342.00 |            74636.00 |
+| 2018 |     377000.00 |     261289.70 |            67933.13 |
+| 2017 |     358500.00 |     249516.00 |            62379.00 |
+| 2016 |     346037.31 |     241534.04 |            58134.27 |
+| 2015 |     361476.00 |     260985.67 |            52414.02 |
+| 2014 |     361866.00 |     266333.38 |            48128.18 |
+| 2013 |     358783.76 |     270522.96 |            42336.48 |
+| 2012 |     351040.75 |     267493.05 |            39316.56 |
+| 2011 |     340177.51 |     264658.10 |            32657.04 |
+| 2010 |     312124.75 |     237839.06 |            32460.97 |
+| 2009 |     286092.22 |     219718.83 |            28037.04 |
+| 2008 |     277419.41 |     213058.11 |            26354.84 |
+| 2007 |     264172.55 |     205526.25 |            22718.84 |
+| 2006 |     244762.87 |     189691.23 |            20804.84 |
+| 2005 |     229036.72 |     177274.42 |            19239.08 |
+| 2004 |     206107.73 |     158084.63 |            17313.05 |
+| 2003 |     178298.78 |     134972.18 |            14442.20 |
+| 2002 |     156277.01 |     114238.49 |            13752.38 |
+| 2001 |     147424.99 |     107030.54 |            12973.40 |
+| 2000 |     138569.70 |     101017.31 |            10669.87 |
+#+end_example
+
+| 指标   | 能源生产总量(万吨标准煤) | 原煤生产总量(万吨标准煤) | 水电、核电、风电生产总量(万吨标准煤) |
+|--------+--------------------------+--------------------------+--------------------------------------|
+| 2019年 |                397000.00 |                272342.00 |                             74636.00 |
+| 2018年 |                377000.00 |                261289.70 |                             67933.13 |
+| 2017年 |                358500.00 |                249516.00 |                             62379.00 |
+| 2016年 |                346037.31 |                241534.04 |                             58134.27 |
+| 2015年 |                361476.00 |                260985.67 |                             52414.02 |
+| 2014年 |                361866.00 |                266333.38 |                             48128.18 |
+| 2013年 |                358783.76 |                270522.96 |                             42336.48 |
+| 2012年 |                351040.75 |                267493.05 |                             39316.56 |
+| 2011年 |                340177.51 |                264658.10 |                             32657.04 |
+| 2010年 |                312124.75 |                237839.06 |                             32460.97 |
+| 2009年 |                286092.22 |                219718.83 |                             28037.04 |
+| 2008年 |                277419.41 |                213058.11 |                             26354.84 |
+| 2007年 |                264172.55 |                205526.25 |                             22718.84 |
+| 2006年 |                244762.87 |                189691.23 |                             20804.84 |
+| 2005年 |                229036.72 |                177274.42 |                             19239.08 |
+| 2004年 |                206107.73 |                158084.63 |                             17313.05 |
+| 2003年 |                178298.78 |                134972.18 |                             14442.20 |
+| 2002年 |                156277.01 |                114238.49 |                             13752.38 |
+| 2001年 |                147424.99 |                107030.54 |                             12973.40 |
+| 2000年 |                138569.70 |                101017.31 |                             10669.87 |
+* 数据可视化
+
+#+begin_src clojure
+  (ns km.big-data
+    (:require [tech.ml.dataset :as ds]
+              [tech.viz.vega :as vega]
+              [oz.core :as oz]
+              [java-time :as t]
+              [applied-science.darkstar :as darkstar]))
+
+  ;; use oz
+  (def energy-mapseq (->> energy-data
+                          (ds/mapseq-reader)))
+  (def energy-viz
+    {:data {:values energy-mapseq}
+     :width 1200
+     :height 600
+     :layer [{:encoding {:x {:field "指标" :type "quantitative" :scale {:domain [2000 2019]}}
+                         :y {:field "水电、核电、风电生产总量(万吨标准煤)" :type "quantitative"}}
+              :mark {:type "line" :color "blue"}}
+             {:encoding {:x {:field "指标" :type "quantitative" :scale {:domain [2000 2019]}}
+                         :y {:field "原煤生产总量(万吨标准煤)" :type "quantitative"}}
+              :mark {:type "line" :color "red"}}
+             ]})
+
+  (oz/export! energy-viz "test/data/energy-viz-oz.html")
+
+  ;; use tech.viz
+  (-> energy-data
+      (ds/mapseq-reader)
+      ;;((fn [mapseq] (map #(assoc % "指标" (t/to-millis-from-epoch (t/local-date (% "指标")))) mapseq)))
+      (vega/time-series "指标" "水电、核电、风电生产总量(万吨标准煤)"
+                        {:title "Chinese Energy Trend"
+                         :background "white"})
+      (vega/vega->svg-file "test/data/energy-viz-tech.svg"))
+#+end_src
+
+#+RESULTS:
+: nil#'km.big-data/energy-mapseq#'km.big-data/energy-viznilnil
