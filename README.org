@@ -1,1 +1,3 @@
+[[https://jarkeeper.com/kimim/clj-tinker/status.svg]]
+
 clj-tinker is my learning notes
