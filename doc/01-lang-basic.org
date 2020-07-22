@@ -2,50 +2,130 @@
 ** add
 
 #+begin_src clojure :results pp
-  [(+)
-   (+ 1)
-   (+ 1 1)]
+[(+)
+ (+ 1)
+ (+ 1 1.1)]
 #+end_src
 
 #+RESULTS:
-: [0 1 2]
-
-=>
-#+outputs:
-: [0 1 2]
+: [0 1 2.1]
 
 ** sub
 
 #+begin_src clojure :results pp
-  [(- 1)
-   (- 2 1)
-   (- 3 2 1)]
+[(- 1)
+ (- 2 1)
+ (- 3 2 1)]
 #+end_src
-=>
-#+outputs:
+
+#+RESULTS:
 : [-1 1 0]
 
 ** multiply
 
-#+begin_src clojure
+#+begin_src clojure :results pp
 [(*)
-(* 1)
-(* 2 3)]
+ (* 1)
+ (* 2 3)]
 #+end_src
-=>
-#+outputs:
+
+#+RESULTS:
 : [1 1 6]
 
 ** divide
 
-#+begin_src clojure
+#+begin_src clojure :results pp
 [(/ 1)
  (/ 2 1)
  (/ 1 2)]
 #+end_src
-=>
-#+outputs:
+
+#+RESULTS:
 : [1 2 1/2]
+
+** quot & rem
+
+- quot :: quot[ient] of dividing numerator by denominator.
+- rem :: remainder of dividing numerator by denominator.
+
+#+begin_src clojure :results pp
+[(quot 16 5)
+ (rem 16 5)]
+#+end_src
+
+#+RESULTS:
+: [3 1]
+
+#+begin_src clojure :results pp
+[(quot 16.5 5)
+ (rem 16.5 5)
+ (quot 17 5.5)
+ (rem 17 5.5)]
+#+end_src
+
+#+RESULTS:
+: [3.0 1.5 3.0 0.5]
+
+** mod
+
+- mod :: Modulus of num and div. Truncates toward negative infinity.
+
+#+begin_src clojure :results pp
+[(mod 8 5)
+ (mod -8 5)]
+#+end_src
+
+#+RESULTS:
+: [-2 2]
+
+=mod= and =rem= is different when dealing with negative numbers.
+
+#+begin_src clojure :results pp
+[(rem -8 5)
+ (mod -8 5)
+ (rem 8 -5)
+ (mod 8 -5)]
+#+end_src
+
+#+RESULTS:
+: [-3 2 3 -2]
+
+** inc & dec
+
+- inc :: Returns a number one greater than num. Does not auto-promote longs,
+  will throw on overflow. See also: inc'
+- dec :: Returns a number one less than num. Does not auto-promote longs, will
+  throw on overflow. See also: dec'
+
+#+begin_src clojure :results pp
+[(inc 1)
+ (inc 1.1)
+ (dec 1)
+ (dec 1.1)]
+#+end_src
+
+#+RESULTS:
+: [2 2.1 0 0.10000000000000009]
+
+** max & min
+
+- max :: Returns the greatest of the nums.
+- min ::
+
+#+begin_src clojure :results pp
+[(max 1 2 3)
+ (max [1 2 3])
+ (reduce max [1 2 3])
+ (apply max [1 2 3])
+ (min 1 2 3)
+ (min [1 2 3])
+ (reduce min [1 2 3])
+ (apply min [1 2 3])]
+#+end_src
+
+#+RESULTS:
+: [3 [1 2 3] 3 3 1 [1 2 3] 1 1]
+
 
 * str
 ** concat
@@ -169,13 +249,14 @@ Update two key-value's in a map:
       (clojure.set/select even? #{1 2 3 4})])
 #+end_src
 
-#+outputs:
+#+RESULTS:
 : '(#(:y :v :m :k :i) #(:m :k) #(:y :v) #(:i) #(4 2))
+
 * version
 
 #+begin_src clojure
-  (clojure-version)
+(clojure-version)
 #+end_src
-=>
-#+outputs:
+
+#+RESULTS:
 : 1.10.0
