@@ -1,0 +1,20 @@
+=doseq= is used to go throuth a sequence and execute some side-effects, and
+finally return nil.
+
+#+begin_src clojure
+(doseq [n [1 2 3]]
+  n)
+#+end_src
+
+#+RESULTS:
+: nil
+
+While =for= is used to build a lazy sequence:
+
+#+begin_src clojure
+(for [n [1 2 3]]
+  n)
+#+end_src
+
+#+RESULTS:
+| 1 | 2 | 3 |
